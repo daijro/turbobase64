@@ -1,0 +1,2 @@
+include src/turbob64.h
+include src/lib/libtb64.a

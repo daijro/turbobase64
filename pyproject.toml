@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools", "wheel", "Cython"]
+
+[project]
+name = "turbob64"
+version = "1.0.0"
+authors = [
+    {name = "daijro", email = "daijro.dev@gmail.com"},
+]
+description = "Cython bindings for Turbo Base64"
+readme = "README.md"
+keywords = ["base64", "encoding", "decoding", "turbo", "cython"]
+license = {text = "GPL-3.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+	"Programming Language :: C",
+]
+
+[tool.setuptools]
+py-modules = ["_build"]
+
+[tool.setuptools.cmdclass]
+build_py = "_build.build_py"

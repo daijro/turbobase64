@@ -13,7 +13,7 @@ keywords = ["base64", "encoding", "decoding", "turbo", "cython"]
 license = {text = "GPL-3.0"}
 classifiers = [
     "Programming Language :: Python :: 3",
-	"Programming Language :: C",
+    "Programming Language :: C",
 ]
 
 [tool.setuptools]

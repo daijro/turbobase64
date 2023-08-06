@@ -1,4 +1,4 @@
-# distutils: extra_compile_args = /arch:AVX2
+# distutils: extra_compile_args = /O3 /arch:AVX /arch:AVX2 /arch:AVX512
 
 '''
 Copyright (C) powturbo 2016-2023
@@ -97,18 +97,21 @@ cdef extern from "turbob64.h":
     # Ex.: printf("current cpu set=%s\n", cpustr(cpuini(0)) ); 
     cdef char* cpustr(unsigned int cpuisa)
 
-# Additional Definitions
-# TB64_VERSION = 100
-# wchar_t = int  # Assuming `::std::os::raw::c_int` represents `int`
 
 # Set the default run time functions for tb64enc/tb64dec
-tb64ini(0,0)
+tb64ini(0, 0)
 cpu_set = cpuini(0)
 
 # print("current cpu set = ", cpustr(cpu_set)); 
 # print("short supported = ", cpu_set >= 0x60); 
 
+
 # == public API == #
+
+class InvalidCPUError(Exception):
+    # Invalid CPU arch type exception
+    pass
+
 
 cpdef b64encode(bytes input_):
     cdef size_t inlen = len(input_)
@@ -121,12 +124,15 @@ cpdef b64encode(bytes input_):
         outlen
     )
 
+
 cpdef b64decode(bytes input_):
     cdef size_t inlen = len(input_)
     cdef size_t outlen = tb64declen(<uchar*> input_, inlen)
-    # use the short string optimized version
+    if outlen == 0 and inlen != 0:
+        raise ValueError("Invalid input")
     return _transform(
         input_,
+        # use the short string optimized version
         _tb64v256dec if inlen < 2000 and cpu_set == 0x60 else _tb64d,
         inlen,
         outlen
@@ -135,7 +141,7 @@ cpdef b64decode(bytes input_):
 
 # == other shortcuts to turbob64 functions == #
 
-# Memory efficient (small lookup tables) scalar but (slower) version
+# Memory efficient (small lookup tables) scalar (slower)
 cpdef b64senc(bytes input_):
     return _b64enc(input_, tb64senc)
 
@@ -151,47 +157,47 @@ cpdef b64xdec(bytes input_):
 
 # ssse3
 cpdef b64v128enc(bytes input_):
-    assert cpu_set >= 0x32, "ssse3 is not supported"
+    if cpu_set < 0x32: raise InvalidCPUError("ssse3 is not supported")
     return _b64enc(input_, tb64v128enc)
 
 cpdef b64v128dec(bytes input_):
-    assert cpu_set >= 0x32, "ssse3 is not supported"
+    if cpu_set < 0x32: raise InvalidCPUError("ssse3 is not supported")
     return _b64dec(input_, tb64v128dec)
 
 # avx
 cpdef b64v128aenc(bytes input_):
-    assert cpu_set >= 0x50, "avx is not supported"
+    if cpu_set < 0x50: raise InvalidCPUError("avx is not supported")
     return _b64enc(input_, tb64v128aenc)
 
 cpdef b64v128adec(bytes input_):
-    assert cpu_set >= 0x50, "avx is not supported"
+    if cpu_set < 0x50: raise InvalidCPUError("avx is not supported")
     return _b64dec(input_, tb64v128adec)
 
 # avx2
 cpdef b64v256enc(bytes input_):
-    assert cpu_set >= 0x60, "avx2 is not supported"
+    if cpu_set < 0x60: raise InvalidCPUError("avx2 is not supported")
     return _b64enc(input_, tb64v256enc)
 
 cpdef b64v256dec(bytes input_):
-    assert cpu_set >= 0x60, "avx2 is not supported"
+    if cpu_set < 0x60: raise InvalidCPUError("avx2 is not supported")
     return _b64dec(input_, tb64v256dec)
 
 # short strings
 cpdef b64v256enc_short(bytes input_):
-    assert cpu_set >= 0x60, "avx2 is not supported"
+    if cpu_set < 0x60: raise InvalidCPUError("avx2 is not supported")
     return _b64enc(input_, _tb64v256enc)
 
 cpdef b64v256dec_short(bytes input_):
-    assert cpu_set >= 0x60, "avx2 is not supported"
+    if cpu_set < 0x60: raise InvalidCPUError("avx2 is not supported")
     return _b64dec(input_, _tb64v256dec)
 
 # avx512_vbmi
 cpdef b64v512enc(bytes input_):
-    assert cpu_set >= 0x800, "avx512 is not supported"
+    if cpu_set < 0x800: raise InvalidCPUError("avx512 is not supported")
     return _b64enc(input_, tb64v512enc)
 
 cpdef b64v512dec(bytes input_):
-    assert cpu_set >= 0x800, "avx512 is not supported"
+    if cpu_set < 0x800: raise InvalidCPUError("avx512 is not supported")
     return _b64dec(input_, tb64v512dec)
 
 
@@ -204,16 +210,31 @@ cdef bytes _b64enc(bytes input_, TB64FUNC transform_func):
     # run the transformation
     return _transform(input_, transform_func, inlen, outlen)
 
+
 cdef bytes _b64dec(bytes input_, TB64FUNC transform_func):
     # calculate the length of the decoded output buffer
     cdef size_t inlen = len(input_)
     cdef size_t outlen = tb64declen(<uchar*> input_, inlen)
+    if outlen == 0 and inlen != 0:
+        raise ValueError("Invalid input")
     # run the transformation
     return _transform(input_, transform_func, inlen, outlen)
 
+
 cdef bytes _transform(bytes input_, TB64FUNC transform_func, size_t inlen, size_t outlen):
     cdef uchar* transformed_indata = <uchar*> malloc(outlen)
+    
+    # Check if memory allocation was successful
+    if transformed_indata == NULL:
+        raise MemoryError("Failed to allocate memory for transformed data.")
+    
+    # Use the transformation function and store its return value
     cdef size_t size = transform_func(<uchar*> input_, inlen, transformed_indata)
+    
+    # Check if the transformation function worked correctly
+    if size == 0 and inlen != 0:
+        free(transformed_indata)
+        raise ValueError("Transformation failed. Invalid input or buffer error.")
     
     # Convert the transformed data to bytes
     cdef bytes transformed_data = bytes(transformed_indata[:size])

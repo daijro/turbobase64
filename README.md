@@ -13,11 +13,14 @@
     <a href="https://github.com/cython/cython">
         <img src="https://img.shields.io/badge/language-cython-black.svg">
     </a>
+    <a href="https://pypi.org/project/turbob64/">
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/turbob64.svg?color=orange">
+    </a>
+    <h4 align="center">
+        🚀 Lightning fast base64 encoding for Python
+    </h4>
 </p>
 
-<h5 align="center">
-    🚀 Lightning fast base64 encoding for Python
-</h5>
 
 ## ✨ Features
 

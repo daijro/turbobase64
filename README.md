@@ -4,17 +4,20 @@
 
 
 <p align="center">
-    <a href="https://github.com/daijro/OperatorPrank/blob/main/LICENSE">
-        <img src="https://img.shields.io/github/license/daijro/OperatorPrank">
+    <a href="https://github.com/daijro/turbobase64/blob/main/LICENSE">
+        <img src="https://img.shields.io/github/license/daijro/turbobase64?color=yellow">
     </a>
     <a href="https://python.org/">
-        <img src="https://img.shields.io/badge/python-3.x-blue">
+        <img src="https://img.shields.io/badge/python-3.7&#8208;3.11-blue">
     </a>
     <a href="https://github.com/cython/cython">
         <img src="https://img.shields.io/badge/language-cython-black.svg">
     </a>
     <a href="https://pypi.org/project/turbob64/">
         <img alt="PyPI" src="https://img.shields.io/pypi/v/turbob64.svg?color=orange">
+    </a>
+    <a href="https://ci.appveyor.com/project/daijro/turbobase64">
+        <img alt="AppVeyor" src="https://ci.appveyor.com/api/projects/status/github/daijro/turbobase64?svg=true">
     </a>
     <h4 align="center">
         🚀 Lightning fast base64 encoding for Python
